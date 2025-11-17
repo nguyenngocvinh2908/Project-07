@@ -23,12 +23,22 @@ export default defineConfig([
       }
     },
     rules: {
+      // React specific rules
       'react-refresh/only-export-components': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react/prop-types': 'off',
       'react/display-name': 'off',
 
+      // MUI
+      'no-restricted-imports': [
+        'error',
+        {
+          'patterns': [{ 'regex': '^@mui/[^/]+$' }]
+        }
+      ],
+
+      // Common rules
       'no-console': 'warn',
       'no-lonely-if': 'warn',
       'no-unused-vars': 'warn',
