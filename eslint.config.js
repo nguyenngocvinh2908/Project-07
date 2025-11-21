@@ -15,13 +15,11 @@ export default defineConfig([
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite
     ],
-    
     settings: {
       react: {
         version: 'detect'
       }
     },
-
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
