@@ -1,22 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import Button from '@mui/material/Button'
-import AccessAlarmIcon from '@mui/icons-material/AccessAlarm'
-import ThreeDRotation from '@mui/icons-material/ThreeDRotation'
+import React from 'react'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import FormControl from '@mui/material/FormControl'
+import Select from '@mui/material/Select'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness'
+import Box from '@mui/material/Box'
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useColorScheme } from '@mui/material/styles'
+function ModeSelect() {
+  const { mode, setMode } = useColorScheme()
+  const handleChange = (event) => {
+    const selectedMode = event.target.value
+    setMode(selectedMode)
+  }
 
   return (
-    <>
-      <p>Vinh</p>
-      <Button variant='text'>Click</Button>
-      <Button variant='outlined'>Click</Button>
-      <Button variant='contained'>Click</Button>
+    <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+      <InputLabel id="label-select-dark-mode">Mode</InputLabel>
+      <Select
+        labelId="label-select-dark-mode"
+        id="demo-select-small"
+        value={mode || 'system'}
+        label="Mode"
+        onChange={handleChange}
+      >
+        <MenuItem value="light">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <LightModeIcon fontSize='small'/>
+            Light
+          </Box>
+        </MenuItem>
+        <MenuItem value="dark">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <DarkModeIcon fontSize='small'/>
+          Dark
+          </Box>
+        </MenuItem>
+        <MenuItem value="system">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <SettingsBrightnessIcon fontSize='small'/>
+          System
+          </Box>
+        </MenuItem>
+      </Select>
+    </FormControl>
+  )
+}
 
-      <AccessAlarmIcon color='primary'/>
-      <ThreeDRotation sx={{ color: 'yellow' }}/>
+function App() {
+  return (
+    <>
+      <ModeSelect />
     </>
   )
 }
