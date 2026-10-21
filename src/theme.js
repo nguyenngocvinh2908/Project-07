@@ -9,16 +9,16 @@ const theme = extendTheme({
   colorSchemes: {
     light: {
       palette: {
-        mode: 'light',
-        primary: { main: '#1976d2ff', light: '#63a4ff' },
-        background: { default: '#ffffff' }
+        // mode: 'light',
+        // primary: { main: '#1976d2ff', light: '#63a4ff' },
+        // background: { default: '#ffffff' }
       }
     },
     dark: {
       palette: {
-        mode: 'dark',
-        primary: { main: '#90caf9' },
-        background: { default: '#121212' }
+        // mode: 'dark',
+        // primary: { main: '#90caf9' },
+        // background: { default: '#121212' }
       }
     }
   },
@@ -31,11 +31,11 @@ const theme = extendTheme({
             height: '8px'
           },
           '*::-webkit-scrollbar-thumb': {
-            background: '#c8d6e5',
+            background: '#dcdde1',
             borderRadius: '8px'
           },
           '*::-webkit-scrollbar-thumb:hover': {
-            background: '#48dbfb'
+            background: 'white'
           }
         }
       }
@@ -49,30 +49,23 @@ const theme = extendTheme({
     },
     MuiOutlinedInput: {
       styleOverrides: {
-        root: ({ theme }) => ({
-          color: theme.palette.primary.main,
+        root: {
           fontSize: '0.875rem',
-          '.MuiOutlinedInput-notchedOutline': {
-            borderColor: theme.palette.primary.main
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: theme.palette.primary.main
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderWidth: '1px !important'
-          }
-        })
+          '& fieldset': { borderWidth: '1px !important' },
+          '&:hover fieldset': { borderWidth: '1px !important' },
+          '&.Mui-focused fieldset': { borderWidth: '1px !important' }
+        }
       }
     },
     MuiInputLabel: {
       styleOverrides: {
         root: ({ theme }) => ({
-          color: theme.palette.primary.main
+          // color: theme.palette.primary.main
         })
       }
     }
   },
-  // ⚠️ QUAN TRỌNG — để đổi theme bằng code
+  // QUAN TRỌNG — để đổi theme bằng code
   colorSchemeSelector: 'class',
   cssVarPrefix: 'mui'
 })
