@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import Box from '@mui/material/Box'
-import ModeSelect from '../ModeSelect'
+import ModeSelect from '../ModeSelect/ModeSelect'
 import AppsIcon from '@mui/icons-material/Apps'
 import SvgIcon from '@mui/material/SvgIcon'
 import TrelloLogo from '~/assets/trello.svg?react' // Khi Thêm 1 Icon Ngoài MUI Thì Cần Phải Import Thư Viện SVGR
