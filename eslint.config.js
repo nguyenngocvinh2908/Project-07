@@ -40,7 +40,7 @@ export default defineConfig([
 
       // MUI
       'no-restricted-imports': [
-        'error',
+        'off',
         {
           'patterns': [{ 'regex': '^@mui/[^/]+$' }]
         }

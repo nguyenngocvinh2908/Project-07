@@ -37,8 +37,7 @@ function BoardBar() {
         justifyContent: 'space-between',
         gap: 2,
         overflowX: 'auto',
-        bgcolor: (mode === 'dark' ? '#34495e' : '#1976d2'),
-        borderBottom: '1px solid white'
+        bgcolor: (mode === 'dark' ? '#34495e' : '#1976d2')
       }
     }>
       {/* Box Filter */}
@@ -91,7 +90,12 @@ function BoardBar() {
               width: 34,
               height: 34,
               fontSize: 16,
-              border: 'none'
+              border: 'none',
+              cursor: 'pointer',
+              color: 'white',
+              '&:first-of-type': {
+                bgcolor: '#a4b0be'
+              }
             }
           }}
         >
