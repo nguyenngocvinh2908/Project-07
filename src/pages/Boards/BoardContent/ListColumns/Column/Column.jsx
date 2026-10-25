@@ -18,9 +18,10 @@ import Button from '@mui/material/Button'
 import DragHandleIcon from '@mui/icons-material/DragHandle'
 import Box from '@mui/material/Box'
 import ListCards from './ListCards/ListCards'
+import * as sort from '~/utils/sort'
 
 
-function Column() {
+function Column({ column }) {
   const { mode } = useColorScheme()
 
   const [anchorEl, setAnchorEl] = React.useState(null)
@@ -31,6 +32,9 @@ function Column() {
   const handleClose = () => {
     setAnchorEl(null)
   }
+
+  // Map Sort List Card
+  const orderedCards = sort.mapOrder(column?.cards, column?.cardOrderIds, '_id')
   return (
     <Box
       sx={{
@@ -54,7 +58,7 @@ function Column() {
           justifyContent: 'space-between'
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Column Title</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>{column?.title}</Typography>
         <Box>
           <Tooltip title="More Options">
             <ExpandMoreIcon
@@ -115,7 +119,7 @@ function Column() {
         </Box>
       </Box>
       {/* Column Content */}
-      <ListCards />
+      <ListCards cards={column.cards} />
       {/* Column Footer */}
       <Box sx={{
         height: (theme) => theme.trelloCustom.columnFooterHeight,

@@ -12,6 +12,7 @@ import Tooltip from '@mui/material/Tooltip'
 import Button from '@mui/material/Button'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { useColorScheme } from '@mui/material/styles'
+import * as formatters from '~/utils/formatters'
 
 const MENU_STYLES = {
   color: 'white',
@@ -25,8 +26,9 @@ const MENU_STYLES = {
   }
 }
 
-function BoardBar() {
+function BoardBar({ board }) {
   const { mode } = useColorScheme()
+
   return (
     <Box px={2} sx={
       {
@@ -44,13 +46,13 @@ function BoardBar() {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Chip
           icon={<DashboardIcon />}
-          label="VingGaDev Board"
+          label={board?.title}
           clickable
           sx={MENU_STYLES}
         />
         <Chip
           icon={<VpnLockIcon />}
-          label="Public/Private Workspaces"
+          label={formatters.capitalizeFirstLetter(board?.type)}
           clickable
           sx={MENU_STYLES}
         />
