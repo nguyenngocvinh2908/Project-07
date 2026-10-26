@@ -20,6 +20,8 @@ import Box from '@mui/material/Box'
 import ListCards from './ListCards/ListCards'
 import * as sort from '~/utils/sort'
 
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 function Column({ column }) {
   const { mode } = useColorScheme()
@@ -35,8 +37,24 @@ function Column({ column }) {
 
   // Map Sort List Card
   const orderedCards = sort.mapOrder(column?.cards, column?.cardOrderIds, '_id')
+
+  // Dnd Trello
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: column._id, // Kéo Thả Id Của Colum
+    data: { ...column }
+  })
+  const dndKitColumnstyle = {
+    // touchAction: 'none', // Dành cho trường hợp touch default
+    // Nếu dùng CSS.Tranform theo dox thì lỗi strech drag -> Fix dùng Translate
+    transform: CSS.Translate.toString(transform),
+    transition
+  }
   return (
     <Box
+      ref={setNodeRef}
+      style={dndKitColumnstyle}
+      { ...attributes }
+      { ...listeners }
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -119,7 +137,7 @@ function Column({ column }) {
         </Box>
       </Box>
       {/* Column Content */}
-      <ListCards cards={column.cards} />
+      <ListCards cards={orderedCards} />
       {/* Column Footer */}
       <Box sx={{
         height: (theme) => theme.trelloCustom.columnFooterHeight,
