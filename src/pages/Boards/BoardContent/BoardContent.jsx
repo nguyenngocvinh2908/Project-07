@@ -3,8 +3,16 @@ import Box from '@mui/material/Box'
 import { useColorScheme } from '@mui/material/styles'
 import ListColumns from './ListColumns/ListColumns'
 import * as sort from '~/utils/sort'
-import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core'
+import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
+
+import Column from './ListColumns/Column/Column'
+import Card from './ListColumns/Column/ListCards/Card/Card'
+
+const ACTIVE_DRAG_ITEM_TYPE = {
+  COLUMN: 'ACTIVE_DRAG_ITEM_TYPE_COLUMN',
+  CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
+}
 
 function BoardContent({ board }) {
   const { mode } = useColorScheme()
@@ -24,11 +32,23 @@ function BoardContent({ board }) {
 
   const [orderedColumns, setOrderedColumns] = useState([])
 
+  // Cùng 1 thời điểm chỉ có 1 phần tử card hoặc column được kéo
+  const [activeDragItemId, setActiveDragItemId] = useState(null)
+  const [activeDragItemType, setActiveDragItemType] = useState(null)
+  const [activeDragItemData, setActiveDragItemData] = useState(null)
+
   useEffect(() => {
     const orderedColumns = sort.mapOrder(board?.columns, board?.columnOrderIds, '_id')
     // eslint-disable-next-line
     setOrderedColumns(orderedColumns)
   }, [board])
+
+  const handleOnDragStart = (e) => {
+    // console.log(e)
+    setActiveDragItemId(e?.active?.id)
+    setActiveDragItemType(e?.active?.data?.current?.columnId ? ACTIVE_DRAG_ITEM_TYPE.CARD : ACTIVE_DRAG_ITEM_TYPE.COLUMN)
+    setActiveDragItemData(e?.active?.data?.current)
+  }
 
 
   const handleOnDragEnd = (e) => {
@@ -47,10 +67,20 @@ function BoardContent({ board }) {
       // -------------------------------
       setOrderedColumns(dndOrderedColumns)
     }
+
+    // Set lại giá trị khi kéo thả xong
+    setActiveDragItemId(null)
+    setActiveDragItemType(null)
+    setActiveDragItemData(null)
+  }
+
+  // Animation khi thả (drop) 1 phần tử  - Mặc định nếu style lại thi sau khi thả nó mất luôn cái dragOverlaty
+  const CustomDropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: 0.5 } } })
   }
 
   return (
-    <DndContext onDragEnd={handleOnDragEnd} sensors={sensor}>
+    <DndContext onDragStart={handleOnDragStart} onDragEnd={handleOnDragEnd} sensors={sensor}>
       <Box sx={
         {
           p: '10px 0',
@@ -60,6 +90,10 @@ function BoardContent({ board }) {
         }
       }>
         <ListColumns columns={ orderedColumns } />
+        <DragOverlay dropAnimation={CustomDropAnimation}>
+          {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) && <Column column={activeDragItemData} />}
+          {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) && <Card card={activeDragItemData} />}
+        </DragOverlay>
       </Box>
     </DndContext>
   )
