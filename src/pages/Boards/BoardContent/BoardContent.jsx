@@ -3,8 +3,9 @@ import Box from '@mui/material/Box'
 import { useColorScheme } from '@mui/material/styles'
 import ListColumns from './ListColumns/ListColumns'
 import * as sort from '~/utils/sort'
-import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core'
+import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, DragOverlay, defaultDropAnimationSideEffects, closestCorners } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
+import lodash from 'lodash'
 
 import Column from './ListColumns/Column/Column'
 import Card from './ListColumns/Column/ListCards/Card/Card'
@@ -43,19 +44,90 @@ function BoardContent({ board }) {
     setOrderedColumns(orderedColumns)
   }, [board])
 
+  // Hàm tìm id của column thông qua cardId của nó
+  const findColumnByCardId = (cardId) => {
+    // Đoạn này lưu ý, nên dùng column.cards thay vì column.cardOrderIds vì trước handleDragOver chúng ta sẽ làm dữ liệu cho carđ hoàn chỉnh trước rồi mới tạo ra cardOrderIds
+    return orderedColumns.find(column => column?.cards?.map(card => card?._id).includes(cardId))
+  }
+
+  // Trigger khi bắt đầu kéo (drag) một phần tử
   const handleOnDragStart = (e) => {
-    // console.log(e)
     setActiveDragItemId(e?.active?.id)
     setActiveDragItemType(e?.active?.data?.current?.columnId ? ACTIVE_DRAG_ITEM_TYPE.CARD : ACTIVE_DRAG_ITEM_TYPE.COLUMN)
     setActiveDragItemData(e?.active?.data?.current)
   }
 
+  // Trigger trong quá trình kéo (drag) một phần tử
+  const handleOnDragOver = (e) => {
+    // Không làm gì thêm khi kéo phần tử column
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) return
 
+    // Còn nếu kéo card thì xử lý thêm để có thể kéo card qua lại các columns
+    const { active, over } = e
+
+    // Cần đảm bảo nếu không tồn tại active hoặc over (khi kéo ra khỏi phạm vi container) thì return
+    if (!active || !over) return
+
+    // activeDraggingCardId là cái card mình đang kéo
+    const { id: activeDraggingCardId, data: { current: activeDraggingCardData } } = active
+    // overCardId là cái card mình muốn thả (hay tương tác)
+    const { id: overCardId } = over
+
+    // Tìm 2 column của 2 cái card active and over
+    const activeColumn = findColumnByCardId(activeDraggingCardId)
+    const overColumn = findColumnByCardId(overCardId)
+
+    if (!activeColumn || !overColumn) return
+
+    // Xử lý logic ở đây khi kéo card qua 2 column khác nhau
+    if (activeColumn._id !== overColumn._id) {
+      setOrderedColumns(prevColumns => {
+        // Tìm vị trí index của overCard trong column đích (nơi mà active card sắp đc thả)
+        const overCardIndex = overColumn?.cards?.findIndex(card => card._id === overCardId)
+
+        // Logic tính toán 'cardIndex mới' (trên hoặc dưới của overCard ) lấy chuẩn từ code của thư viên
+        let newCardIndex
+        const isBelowOverItem = active.rect.current.translated &&
+                        active.rect.current.translated.top > over.rect.top + over.rect.height
+        const modifier = isBelowOverItem ? 1 : 0
+        // Nếu không tìm thấy overCard (overCardIndex < 0) thì chèn vào cuối cột (bằng length, không + 1)
+        newCardIndex = overCardIndex >= 0 ? overCardIndex + modifier : overColumn?.cards?.length + 1
+
+        // 3. Clone sâu mảng state cũ để thao tác an toàn (Immutable)
+        const nextColumns = lodash.cloneDeep(prevColumns)
+        const nextActiveColumn = nextColumns.find(c => c._id === activeColumn._id)
+        const nextOverColumn = nextColumns.find(c => c._id === overColumn._id)
+
+        if (nextActiveColumn) {
+          // Xóa card ở cái column active (hay là xóa card ở column cũ)
+          nextActiveColumn.cards = nextActiveColumn.cards.filter(card => card._id !== activeDraggingCardId)
+          // Cập nhật lại mảng cardOrderIds cho chuẩn dữ liệu
+          nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(card => card._id)
+        }
+
+        if (nextOverColumn) {
+          // Kiêm tra xem card đang kéo nó có tồn tại ở overColumn chưa, nếu có thì cần xóa nó trước
+          nextOverColumn.cards = nextOverColumn.cards.filter(card => card._id !== activeDraggingCardId)
+          // Tiếp theo là thêm cái card đang kéo vào overColumn theo vị trí index mới
+          nextOverColumn.cards = nextOverColumn.cards.toSpliced(newCardIndex, 0, activeDraggingCardData)
+          // Cập nhật lại mảng cardOrderIds cho chuẩn dữ liệu
+          nextOverColumn.cardOrderIds = nextOverColumn.cards.map(card => card._id)
+        }
+        return nextColumns
+      })
+    }
+  }
+
+  // Trigger khi kết thúc hành động kéo (drag) một phần tử => hành động thả
   const handleOnDragEnd = (e) => {
+
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) {
+      console.log("Hành động kéo thả card - Sẽ làm tiếp logic re-order card trong cùng cột ở đây!")
+    }
     const { active, over } = e
 
     // Kiểm tra nếu không tồn tại over(kéo thả linh tinh ra ngoài thì return tránh lỗi)
-    if (!over) return
+    if (!over || !active) return
 
     // Nếu vị trí kéo thả mới khác với vị trí ban đầu
     if (active.id !== over.id) {
@@ -74,13 +146,21 @@ function BoardContent({ board }) {
     setActiveDragItemData(null)
   }
 
-  // Animation khi thả (drop) 1 phần tử  - Mặc định nếu style lại thi sau khi thả nó mất luôn cái dragOverlaty
+  // Animation khi thả (drop) 1 phần tử  - Mặc định nếu style lại thi sau khi thả nó mất luôn cái dragOverlaty (nhớ là hình động khi thả)
   const CustomDropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: 0.5 } } })
   }
 
   return (
-    <DndContext onDragStart={handleOnDragStart} onDragEnd={handleOnDragEnd} sensors={sensor}>
+    <DndContext
+      // Phần cảm biến
+      sensors={sensor}
+      // Thuật toán phát hiện (nếu ko có nó thì card có cover lớn sẽ không kéo qua lại giữu các column vì lúc này nó bị conflict giữa card và column), chúng ta sẽ dùng closestConers thày vì dùng closestCenter
+      collisionDetection={closestCorners}
+      onDragStart={handleOnDragStart}
+      onDragOver={handleOnDragOver}
+      onDragEnd={handleOnDragEnd}
+    >
       <Box sx={
         {
           p: '10px 0',
@@ -89,7 +169,7 @@ function BoardContent({ board }) {
           height: (theme) => theme.trelloCustom.boardContentHeight
         }
       }>
-        <ListColumns columns={ orderedColumns } />
+        <ListColumns columns={orderedColumns} />
         <DragOverlay dropAnimation={CustomDropAnimation}>
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) && <Column column={activeDragItemData} />}
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) && <Card card={activeDragItemData} />}

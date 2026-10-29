@@ -23,12 +23,15 @@ function Card({ card }) {
     id: card._id, // Kéo Thả Id Của Colum
     data: { ...card }
   })
+
+  // Custom css cho phần tử kéo (drag)
   const dndKitCardStyle = {
     // touchAction: 'none', // Dành cho trường hợp touch default
     // Nếu dùng CSS.Tranform theo dox thì lỗi strech drag -> Fix dùng Translate
     transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : undefined
+    opacity: isDragging ? 0.5 : undefined,
+    border: isDragging ? '1px solid #2ecc71' : undefined
   }
   return (
     <MuiCard
