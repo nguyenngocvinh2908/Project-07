@@ -43,6 +43,8 @@ function Column({ column }) {
     id: column._id, // Kéo Thả Id Của Colum
     data: { ...column }
   })
+
+  // Custom css cho phần tử kéo (drag)
   const dndKitColumnstyle = {
     // touchAction: 'none', // Dành cho trường hợp touch default
     // Nếu dùng CSS.Tranform theo dox thì lỗi strech drag -> Fix dùng Translate
