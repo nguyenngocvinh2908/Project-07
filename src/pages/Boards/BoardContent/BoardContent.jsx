@@ -3,6 +3,7 @@ import Box from '@mui/material/Box'
 import { useColorScheme } from '@mui/material/styles'
 import ListColumns from './ListColumns/ListColumns'
 import * as sort from '~/utils/sort'
+import * as formmatters from '~/utils/formatters'
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, DragOverlay, defaultDropAnimationSideEffects, closestCorners } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import lodash from 'lodash'
@@ -13,6 +14,11 @@ import Card from './ListColumns/Column/ListCards/Card/Card'
 const ACTIVE_DRAG_ITEM_TYPE = {
   COLUMN: 'ACTIVE_DRAG_ITEM_TYPE_COLUMN',
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
+}
+
+// Animation khi thả (drop) 1 phần tử  - Mặc định nếu style lại thi sau khi thả nó mất luôn cái dragOverlaty (nhớ là hình động khi thả)
+const CustomDropAnimation = {
+  ideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: 0.5 } } })
 }
 
 function BoardContent({ board }) {
@@ -75,6 +81,11 @@ function BoardContent({ board }) {
       if (nextActiveColumn) {
         // Xóa card ở cái column active (hay là xóa card ở column cũ)
         nextActiveColumn.cards = nextActiveColumn.cards.filter(card => card._id !== activeDraggingCardId)
+
+        // Thêm PlaceholderCard nếu Column rỗng. Bị kéo hết card đi
+        if (lodash.isEmpty(nextActiveColumn.cards)) {
+          nextActiveColumn.cards = [formmatters.generatePlaceholderCard(nextActiveColumn)]
+        }
         // Cập nhật lại mảng cardOrderIds cho chuẩn dữ liệu
         nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(card => card._id)
       }
@@ -91,6 +102,9 @@ function BoardContent({ board }) {
 
         // Tiếp theo là thêm cái card đang kéo vào overColumn theo vị trí index mới
         nextOverColumn.cards = nextOverColumn.cards.toSpliced(newCardIndex, 0, rebuilt_activeDraggingCardData)
+
+        // Xóa cái placeholder card đi nếu column thật sự tồn tại 1 phần tử
+        nextOverColumn.cards = nextOverColumn.cards.filter(card => !card.FE_PlaceholderCard)
 
         // Cập nhật lại mảng cardOrderIds cho chuẩn dữ liệu
         nextOverColumn.cardOrderIds = nextOverColumn.cards.map(card => card._id)
@@ -171,7 +185,7 @@ function BoardContent({ board }) {
       const activeColumn = findColumnByCardId(activeDraggingCardId)
       const overColumn = findColumnByCardId(overCardId)
 
-      if (!activeColumn || !activeColumn) return
+      if (!activeColumn || !overColumn) return
       if (oldColumnWhenDraggingCard._id !== overColumn._id) {
         // Hành động kéo thả trong 2 column khác nhau
         moveCardBetweenDifferentColumns(
@@ -226,11 +240,6 @@ function BoardContent({ board }) {
     setActiveDragItemType(null)
     setActiveDragItemData(null)
     setOldColumnWhenDraggingCard(null)
-  }
-
-  // Animation khi thả (drop) 1 phần tử  - Mặc định nếu style lại thi sau khi thả nó mất luôn cái dragOverlaty (nhớ là hình động khi thả)
-  const CustomDropAnimation = {
-    sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: 0.5 } } })
   }
 
   return (
